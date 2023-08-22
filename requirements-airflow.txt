@@ -1,0 +1,4 @@
+pyathena
+pymongo
+minio
+psycopg2-binary

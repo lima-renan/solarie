@@ -1,0 +1,18 @@
+source:
+  type: "mongodb"
+  config:
+    # Coordinates
+    connect_uri: "mongodb://root:toor@172.21.0.3/cart_mesh"
+
+    # Credentials
+    username: root
+    password: toor
+    authMechanism: "DEFAULT"
+
+    # Options
+    enableSchemaInference: True
+    useRandomSampling: True
+    #maxSchemaSize: 300
+
+#sink:
+  # sink configs

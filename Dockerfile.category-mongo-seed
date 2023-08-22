@@ -1,0 +1,13 @@
+FROM mongo:5.0
+
+ARG DATABASE_URI_CATEGORY
+ARG USERNAME
+ARG PASSWORD
+
+ENV DATABASE_URI_CATEGORY ${DATABASE_URI_CATEGORY}
+ENV USERNAME ${USERNAME}
+ENV PASSWORD ${PASSWORD}
+
+COPY $PWD/volumes/products/categories.json /categories.json
+
+CMD mongoimport --username ${USERNAME} --password ${PASSWORD} --uri ${DATABASE_URI_CATEGORY} --collection categories --drop --file /categories.json --jsonArray

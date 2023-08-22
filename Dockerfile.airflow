@@ -1,0 +1,9 @@
+FROM apache/airflow:2.3.0-python3.8
+
+ARG AIRFLOW_USER_HOME=/opt/airflow/
+
+WORKDIR ${AIRFLOW_USER_HOME}
+
+COPY requirements-airflow.txt  ${AIRFLOW_USER_HOME}/requirements.txt
+RUN pip3 install --upgrade pip
+RUN pip3 install -r requirements.txt 

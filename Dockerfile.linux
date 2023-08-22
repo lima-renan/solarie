@@ -1,0 +1,15 @@
+FROM alpine:3.14
+
+#Atualiza os repositórios do apk
+RUN apk update
+
+# Instala as dependências desejadas, incluindo o pacote iputils
+RUN apk add --no-cache iputils
+
+RUN apk add --no-cache curl
+
+# Define o diretório de trabalho dentro do contêiner
+WORKDIR /app
+
+# Comando padrão a ser executado quando o contêiner for iniciado
+ENTRYPOINT ["/bin/sh"]

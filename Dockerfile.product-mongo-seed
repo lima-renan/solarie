@@ -1,0 +1,14 @@
+FROM mongo:5.0
+
+ARG DATABASE_URI_PRODUCT
+ARG USERNAME
+ARG PASSWORD
+
+ENV DATABASE_URI_PRODUCT ${DATABASE_URI_PRODUCT}
+ENV USERNAME ${USERNAME}
+ENV PASSWORD ${PASSWORD}
+
+
+COPY $PWD/volumes/products/products.json /products.json
+
+CMD mongoimport --username ${USERNAME} --password ${PASSWORD} --uri ${DATABASE_URI_PRODUCT} --collection products --drop --file /products.json --jsonArray

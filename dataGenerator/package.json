@@ -1,0 +1,17 @@
+{
+    "name": "random-user-generator",
+    "version": "1.0.0",
+    "description": "Script para gerar usuários aleatórios",
+    "scripts": {
+      "start": "node /usr/src/app/random-user-generator.js"
+    },
+    "author": "Seu Nome",
+    "license": "MIT",
+    "dependencies": {
+      "faker": "5.5.3",
+      "minio": "^7.1.1",
+      "mongoose": "^6.0.0",
+      "passport-local-mongoose": "^6.1.0"
+    }
+  }
+  

@@ -1,0 +1,399 @@
+version: '3.9'
+
+networks:
+  datanet:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.21.0.0/26
+
+x-airflow-common:
+  &airflow-common
+  build:
+    context: .
+    dockerfile: Dockerfile.airflow
+  env_file: 
+    - .env
+  volumes:
+    - $PWD/volumes/airflow-data/dags:/opt/airflow/dags
+    - $PWD/volumes/airflow-data/logs:/opt/airflow/logs
+    - $PWD/volumes/airflow-data/plugins:/opt/airflow/plugins
+    - $PWD/volumes/airflow-data/airflow.cfg:/opt/airlfow/airflow.cfg
+  networks:
+    - datanet
+  
+  
+x-airflow-depends-on:
+  &airflow-depends-on
+  depends_on:
+    airflow_db:
+      condition: service_healthy
+    airflow-init:
+      condition: service_completed_successfully
+
+services:
+  app:
+    restart: always
+    container_name: app
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.app
+    env_file: 
+      - .env
+    volumes:
+      - ./frontend/app/src:/app/src
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth-server
+    networks:
+      datanet:
+        ipv4_address: 172.21.0.6
+    
+  auth-server:
+    restart: always
+    container_name: auth-server
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.auth-server
+    env_file: 
+      - .env
+    volumes:
+      - ./backend/auth-server/src:/auth-server/src
+    ports:
+      - 8082:8081
+    depends_on:
+      user-mongodb:
+        condition: service_healthy
+      cart-mongodb:
+        condition: service_healthy
+      product-mongodb:
+        condition: service_healthy
+    networks:
+      datanet:
+        ipv4_address: 172.21.0.4
+
+  user-mongodb:
+    restart: always
+    container_name: user-mongodb
+    image: mongo:5.0
+    ports:
+      - 27017:27017
+    volumes:
+      - $PWD/volumes/mongodb/data/user:/data/db
+      - $PWD/volumes/mongodb/docker-entrypoint-initdb.d/mongo-init-user.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    environment:
+       MONGO_INITDB_ROOT_USERNAME: MONGO_ROOT_USER
+       MONGO_INITDB_ROOT_PASSWORD: MONGO_ROOT_PASSWORD
+       MONGO_INITDB_DATABASE: MONGO_DATABASE_INIT
+    healthcheck:
+      test: echo 'db.runCommand({serverStatus:1}).ok' | mongo admin -u ${MONGO_ROOT_USER} -p ${MONGO_ROOT_PASSWORD} --quiet | grep 1
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      datanet:
+        ipv4_address: 172.21.0.5
+    
+  cart-mongodb:
+    restart: always
+    container_name: cart-mongodb
+    image: mongo:5.0
+    ports:
+      - 27018:27017
+    volumes:
+      - $PWD/volumes/mongodb/data/cart:/data/db
+      - $PWD/volumes/mongodb/docker-entrypoint-initdb.d/mongo-init-cart.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: MONGO_ROOT_USER
+      MONGO_INITDB_ROOT_PASSWORD: MONGO_ROOT_PASSWORD
+      MONGO_INITDB_DATABASE: MONGO_DATABASE_INIT
+    healthcheck:
+      test: echo 'db.runCommand({serverStatus:1}).ok' | mongo admin -u ${MONGO_ROOT_USER} -p ${MONGO_ROOT_PASSWORD} --quiet | grep 1
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      datanet:
+        ipv4_address: 172.21.0.3
+
+  product-mongodb:
+    restart: always
+    container_name: product-mongodb
+    image: mongo:5.0
+    ports:
+      - 27019:27017
+    volumes:
+      - $PWD/volumes/mongodb/data/product:/data/db
+      - $PWD/volumes/mongodb/docker-entrypoint-initdb.d/mongo-init-product.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: MONGO_ROOT_USER
+      MONGO_INITDB_ROOT_PASSWORD: MONGO_ROOT_PASSWORD
+      MONGO_INITDB_DATABASE: MONGO_DATABASE_INIT
+    healthcheck:
+      test: echo 'db.runCommand({serverStatus:1}).ok' | mongo admin -u ${MONGO_ROOT_USER} -p ${MONGO_ROOT_PASSWORD} --quiet | grep 1
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      datanet:
+        ipv4_address: 172.21.0.2
+
+  product-mongo-seed:
+    restart: on-failure
+    container_name: product-mongo-seed
+    build:
+      context: ./
+      dockerfile: Dockerfile.product-mongo-seed
+      args:
+        - DATABASE_URI_PRODUCT=${MONGO_DATABASE_PRODUCT_URI}
+        - USERNAME=${MONGO_DATABASE_PRODUCT_USER}
+        - PASSWORD=${MONGO_DATABASE_PRODUCT_PASS}
+    depends_on:
+      product-mongodb:
+        condition: service_healthy
+    networks:
+      datanet:
+       ipv4_address: 172.21.0.7
+
+  category-mongo-seed:
+    restart: on-failure
+    container_name: category-mongo-seed
+    build:
+      context: ./
+      dockerfile: Dockerfile.category-mongo-seed
+      args:
+        - DATABASE_URI_CATEGORY=${MONGO_DATABASE_CATEGORY_URI}
+        - USERNAME=${MONGO_DATABASE_PRODUCT_USER}
+        - PASSWORD=${MONGO_DATABASE_PRODUCT_PASS}
+    depends_on:
+      product-mongodb:
+        condition: service_healthy
+    networks:
+      datanet:
+       ipv4_address: 172.21.0.8
+
+  minio:
+    restart: always
+    image: minio/minio
+    container_name: minio
+    ports:
+      - 9000:9000
+      - 9001:9001
+    environment:
+      MINIO_ROOT_USER: 'minio_user'
+      MINIO_ROOT_PASSWORD: 'minio_password'
+      MINIO_ADDRESS: ':9000'
+      MINIO_CONSOLE_ADDRESS: ':9001'
+    volumes:
+      - $PWD/volumes/minio:/data
+    command: minio server /data
+    networks:
+      datanet:
+       ipv4_address: 172.21.0.9
+
+  postgres:
+    container_name: postgres
+    image: postgres:11.0-alpine
+    ports:
+      - 5432:5432
+    volumes:
+      - $PWD/volumes/postgres/docker-entrypoint-initdb.d/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - $PWD/volumes/postgres/sources:/var/lib/postgresql/csvs
+      - $PWD/volumes/postgres/postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${POSTGRESQL_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_USER_PASSWORD}
+      - POC_PASSWORD=${DATABASE_PASSWORD}
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "postgres", "-U", "poc" ]
+      interval: 5s
+      retries: 5
+    networks:
+      datanet:
+       ipv4_address: 172.21.0.10
+
+  random-data-generator:
+    restart: on-failure
+    container_name: data_generator
+    build:
+      context: ./dataGenerator
+      dockerfile: Dockerfile.random-data-generator
+    env_file: 
+      - .env
+    depends_on:
+      cart-mongodb:
+        condition: service_healthy
+      product-mongodb:
+        condition: service_healthy
+      user-mongodb:
+        condition: service_healthy
+    networks:
+     datanet:
+       ipv4_address: 172.21.0.11
+
+  airflow_db:
+    container_name: airflow_db
+    image: postgres:11.0-alpine
+    environment:
+      - POSTGRES_USER=${AIRFLOW_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${AIRFLOW_POSTGRES_PASSWORD}
+      - POSTGRES_DB=${AIRFLOW_POSTGRES_DB}
+    ports:
+      - 5433:5432
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "postgres", "-U", "airflow" ]
+      interval: 5s
+      retries: 5
+    networks:
+      datanet:
+       ipv4_address: 172.21.0.12
+  
+  mysql: # banco para metadados do Datahub
+    restart: always
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --default-authentication-plugin=mysql_native_password
+    container_name: mysql
+    environment:
+    - MYSQL_DATABASE=${MYSQL_DATABASE}
+    - MYSQL_USER=${MYSQL_USER}
+    - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    healthcheck:
+      interval: 1s
+      retries: 5
+      start_period: 2s
+      test: mysqladmin ping -h mysql -u $$MYSQL_USER --password=$$MYSQL_PASSWORD
+      timeout: 5s
+    hostname: mysql
+    image: mariadb:10.5.8
+    ports:
+    - 3306:3306
+    volumes:
+    - $PWD/volumes/mysql/docker-entrypoint-initdb.d/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    - $PWD/volumes/mysql/docker-entrypoint-initdb.d/dump-datahub-202308212316-backup.sql:/docker-entrypoint-initdb.d/02-dump-datahub-202308212316-backup.sql
+    - $PWD/volumes/mysql/mysql-data:/var/lib/mysql
+    networks:
+      datanet:
+       ipv4_address: 172.21.0.13
+
+  airflow-scheduler:
+    <<: *airflow-common
+    <<: *airflow-depends-on
+    container_name: airflow_scheduler
+    command: scheduler
+    restart: on-failure
+    ports:
+      - 8793:8793
+    networks:
+      datanet:
+       ipv4_address: 172.21.0.15
+
+  airflow-webserver:
+    <<: *airflow-common
+    <<: *airflow-depends-on
+    container_name: airflow_webserver
+    restart: always
+    command: webserver
+    ports:
+      - 8087:8080
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+    networks:
+      datanet:
+       ipv4_address: 172.21.0.16
+
+  airflow-init:
+    <<: *airflow-common
+    container_name: airflow-init
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        mkdir -p /airflow-data/logs /airflow-data/dags /airflow-data/plugins
+        chown -R "${AIRFLOW_UID}:0" /airflow-data/{logs,dags,plugins}
+        exec /entrypoint airflow version
+    networks:
+      datanet:
+       ipv4_address: 172.21.0.17
+
+  trino-coordinator:
+    container_name: trino
+    image: trinodb/trino:latest
+    hostname: trino-coordinator
+    environment:
+      - TRINO_ENVIRONMENT=production
+    ports:
+      - 8085:8080
+    volumes:
+      - $PWD/volumes/trino/etc:/etc/trino
+    networks:
+      datanet:
+       ipv4_address: 172.21.0.18
+
+  trino-worker:
+    image: trinodb/trino:latest
+    container_name: trino-worker
+    hostname: trino-worker
+    environment:
+      - TRINO_ENVIRONMENT=production
+      - TRINO_DISCOVERY_URI=http://172.21.0.18:8080
+    volumes:
+      - $PWD/volumes/trino/etc:/etc/trino
+    networks:
+       datanet:
+        ipv4_address: 172.21.0.19
+
+
+  jupyter_lab:
+    container_name: jupyter_lab
+    build:
+      context: .
+      dockerfile: Dockerfile.jupyter
+    ports: 
+      - 8888:8888
+    environment: 
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=easy
+    volumes:
+      - $PWD/volumes/jupyter/work:/home/jovyan/work
+      - $PWD/volumes/jupyter/config:/etc/jupyter/config
+    networks:
+      datanet:
+       ipv4_address: 172.21.0.20
+
+  mariadb:
+    container_name: mariadb
+    hostname: mariadb
+    image: mariadb:10.5.8
+    ports:
+      - 3307:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
+      - MYSQL_USER=${MARIADB_USER}
+      - MYSQL_PASSWORD=${MARIADB_PASSWORD}
+      - MYSQL_DATABASE=${MARIADB_DATABASE}
+    networks:
+      datanet:
+       ipv4_address: 172.21.0.21
+
+  hive-metastore:
+    container_name: hive-metastore
+    hostname: hive-metastore
+    image: 'bitsondatadev/hive-metastore:latest'
+    ports:
+      - 9083:9083 # Metastore Thrift
+    volumes:
+      - $PWD/volumes/hive/conf/metastore-site.xml:/opt/apache-hive-metastore-3.0.0-bin/conf/metastore-site.xml:ro
+    environment:
+      - METASTORE_DB_HOSTNAME=${METASTORE_DB_HOSTNAME}
+    depends_on:
+      - mariadb
+    networks:
+      datanet:
+       ipv4_address: 172.21.0.22

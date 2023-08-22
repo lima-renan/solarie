@@ -1,0 +1,14 @@
+FROM node:16-alpine
+
+WORKDIR /auth-server
+
+# Install Typescript Globally
+RUN npm install -g typescript
+
+COPY /auth-server /auth-server
+
+RUN yarn install
+
+EXPOSE 8081
+
+CMD ["yarn", "start"]
