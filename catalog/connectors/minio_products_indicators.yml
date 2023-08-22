@@ -1,0 +1,12 @@
+source:
+    type: s3
+    config:
+        path_specs:
+            -
+                include: 's3://dadosdeprodutos/*.*'
+        aws_config:
+            aws_access_key_id: minio_user
+            aws_secret_access_key: minio_password
+            aws_endpoint_url: 'http://172.21.0.9:9000'
+            aws_region: us-east-1
+        env: DEV

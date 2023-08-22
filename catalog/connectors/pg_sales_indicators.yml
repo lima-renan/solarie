@@ -1,0 +1,7 @@
+source:
+    type: postgres
+    config:
+        host_port: '172.21.0.10:5432'
+        database: main
+        username: poc
+        password: user_password

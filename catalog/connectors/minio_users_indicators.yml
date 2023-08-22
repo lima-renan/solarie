@@ -3,7 +3,7 @@ source:
     config:
         path_specs:
             -
-                include: 's3://usuariosprodutos/*.*'
+                include: 's3://dadosdeclientes/*.*'
         aws_config:
             aws_access_key_id: minio_user
             aws_secret_access_key: minio_password

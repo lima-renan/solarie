@@ -13,7 +13,7 @@ Projeto de Graduação em Computação (PGC) - Orientador: Prof. Dr. Carlos Albe
 ### A aplicação foi denomindada de Solarié, sendo o frontend baseado no Eyesome cujo template foi desenvolvido pela usuária do Github Sandhya1007, vide: https://github.com/SandhyaR1007/eyesome-react <br /><br />
 ### Para o backend, utilizou-se um template  mern-auth-server disponibilizado pelo usuário do Github collegewap, vide: https://github.com/collegewap/mern-auth-server
 ### Para comentários de código, configurações de jdbc e blocos de códigos mais operacionais utilizou-se o ChatGPT como apoio, vide: https://chat.openai.com/ 
-### A pasta Arquitetura, traz os desenhos desenvolvidos e a detalhes das tecnologias utilizadas. <br /><br />
+### O diretório arquitetura/ traz os desenhos desenvolvidos e a detalhes das tecnologias utilizadas. <br /><br />
 ### Para executar o projeto deve-se ter o docker e o docker compose instalados, vide: https://docs.docker.com/get-docker/ <br /><br />
 ### A execução do projeto é feita a partir dos comandos: 1 - Criar um .env no diretório raiz do projeto e copiar os dados de env.txt, 2 - docker-compose -f docker-compose.DataMesh.yml up --build --force-recreate, 3 - docker-compose -f catalog/docker-compose.DataMesh.yml up --build --force-recreate, 4 - ./catalog/datahub-upgrade.sh -u RestoreIndices <br /><br />
 ### A exclusão dos containers é feita através: 1 - docker-compose -f catalog/docker-compose.DataMesh.yml down -v, 2 - docker-compose -f docker-compose.DataMesh.yml down -v <br /><br />
