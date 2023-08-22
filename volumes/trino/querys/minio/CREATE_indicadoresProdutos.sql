@@ -1,4 +1,5 @@
-CREATE SCHEMA IF NOT EXISTS minio.dadosdeprodutos;
+CREATE SCHEMA IF NOT EXISTS minio.dadosdeprodutos
+    WITH (location = 's3a://dadosdeprodutos/');
 
 CREATE TABLE IF NOT EXISTS minio.dadosdeprodutos.indicadoresProdutos (
         indicator VARCHAR,
