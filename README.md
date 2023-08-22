@@ -1,12 +1,12 @@
  <img src="https://upload.wikimedia.org/wikipedia/commons/e/ee/Ufabc_logo.png" width="75"/> <br /> <br /> Universidade Federal do ABC <br />
-Projeto de Graduação em Computação (PGC) - Orientador: Prof. Dr. Carlos Alberto Kamienski - agosto de 2023
+## Projeto de Graduação em Computação (PGC) - Orientador: Prof. Dr. Carlos Alberto Kamienski - agosto de 2023 <br /><br />
 
-**NOVAS ARQUITETURAS DE DADOS E SUAS PERSPECTIVAS**
+## NOVAS ARQUITETURAS DE DADOS E SUAS PERSPECTIVAS <br /><br />
 
-*Solarié*
+### Solarié <br /><br /><br />
 
 
-**Renan Ferreira Lima** <br /> GitHub: lima-renan	<br /> Linkedin: linkedin.com/in/renanflimabr
+## Renan Ferreira Lima <br />   ## GitHub: lima-renan <br /> 	## Linkedin: linkedin.com/in/renanflimabr
 
 
 ## Repositório com os códigos-fonte da aplicação desenvolvida para complementar o que foi estudado na monografia. O tema central do Projeto são as Novas Arquiteturas de dados, em especial, o Data Mesh  <br /><br /><br />
