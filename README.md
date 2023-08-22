@@ -21,4 +21,5 @@
 ### No diretório volumes/ há alguns scripts adicionais para testes e execução do projeto.  <br /><br />
 ### No diretório catalog/ há alguns scripts e códigos relacionados ao catálogo de dados.  <br /><br />
 ### Já os diretório frontend/ e backend/ há códigos relacionados a estas estruturas. <br /><br />
+### O diretório relatorio/ tema a monografia em pdf. <br /><br />
 ### O endpoint do Solarié é o http://localhost:3000, os demias endpoinst estão especificados em docker-compose.DataMesh.yml
