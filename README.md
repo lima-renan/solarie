@@ -6,7 +6,7 @@
 
 ## Solarié <br /><br /><br />
 
-<img src="https://github.com/lima-renan/solarie/blob/main/arquitetura/datamesh-solarie-solucao.png" width="375"/> <br /> <br /> 
+<img src="https://github.com/lima-renan/solarie/blob/main/arquitetura/datamesh-solarie-solucao.png" width="1500"/> <br /> <br /> 
 
 ## Renan Ferreira Lima <br />   GitHub: lima-renan <br />  Linkedin: linkedin.com/in/renanflimabr
 
