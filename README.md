@@ -6,12 +6,13 @@
 
 ## Solarié <br /><br /><br />
 
+<img src="https://github.com/lima-renan/solarie/blob/main/arquitetura/datamesh-solarie-solucao.png" width="375"/> <br /> <br /> 
 
 ## Renan Ferreira Lima <br />   GitHub: lima-renan <br />  Linkedin: linkedin.com/in/renanflimabr
 
 
 ### Repositório com os códigos-fonte da aplicação desenvolvida para complementar o que foi estudado na monografia. O tema central do Projeto são as Novas Arquiteturas de dados, em especial, o Data Mesh  <br /><br /><br />
-### A aplicação foi denomindada de Solarié, sendo o frontend baseado no Eyesome cujo template foi desenvolvido pela usuária do Github Sandhya1007, vide: https://github.com/SandhyaR1007/eyesome-react <br /><br />
+### A aplicação foi denominada de Solarié, sendo o frontend baseado no Eyesome cujo template foi desenvolvido pela usuária do Github Sandhya1007, vide: https://github.com/SandhyaR1007/eyesome-react <br /><br />
 ### Para o backend, utilizou-se um template  mern-auth-server disponibilizado pelo usuário do Github collegewap, vide: https://github.com/collegewap/mern-auth-server
 ### Para comentários de código, configurações de jdbc e blocos de códigos mais operacionais utilizou-se o ChatGPT como apoio, vide: https://chat.openai.com/ 
 ### O diretório arquitetura/ traz os desenhos desenvolvidos e a detalhes das tecnologias utilizadas. <br /><br />
