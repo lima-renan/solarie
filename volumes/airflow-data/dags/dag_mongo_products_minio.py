@@ -9,12 +9,48 @@ import urllib3
 from io import BytesIO
 import tempfile
 import os
+from airflow.utils.dates import days_ago
 
 default_args = {
     'owner': 'produtos',
     'start_date': datetime(2023, 8, 14),
     'retries': 1,
 }
+
+#gera os arquivos JSON
+def generate_indicator_json(name, indicators, minio_client, config):
+
+    indicators_list = []
+
+    for item in indicators:
+        formatted_item = {
+            "indicator": name,
+            "group_indicator": item["_id"],
+            "value_indicator": item["value"]
+        }
+        indicators_list.append(formatted_item)
+
+    # Serializa a lista de indicadores como uma string JSON
+    json_data = '\n'.join([json.dumps(ind, ensure_ascii=False) for ind in indicators_list])
+    data = BytesIO(json_data.encode('utf-8'))
+
+    # Cria um arquivo temporário
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(data.getvalue())
+        temp_file_path = temp_file.name
+
+    if not minio_client.bucket_exists(config["dest_bucket"]):
+        minio_client.make_bucket(config["dest_bucket"])
+
+    # Carrega arquivo com o nome do indicador
+    minio_client.fput_object(config["dest_bucket"], "indicator_" + name + ".json", temp_file_path)
+
+
+    # Remove o arquivo temporário
+    os.remove(temp_file_path)
+
+generate_indicator_json
+
 
 def aggregate_and_save_to_minio():
     # Conectando ao MongoDB usando a URI fornecida
@@ -106,17 +142,6 @@ def aggregate_and_save_to_minio():
     result_trending_count_by_category = list(db.products.aggregate(pipeline_trending_count_by_category))
 
     client.close()
-    
-    # Criar um dicionário para armazenar os resultados com labels
-    all_results = {
-        "product_count_by_brand": result_product_count_by_brand, #"label": "Contagem de Produtos por Marca",
-        "product_count_by_category": result_product_count_by_category, # "label": "Contagem de Produtos por Categoria",
-        "product_count_by_gender": result_product_count_by_gender,  # "label": "Contagem de Produtos por Gênero"
-        "average_price_by_category": result_average_price_by_category,  # "label": "Média de Preço por Categoria"
-        "total_quantity_by_category": result_total_quantity_by_category, # "label": "Quantidade Total Disponível por Categoria"
-        "average_rating_by_gender": result_average_rating_by_gender, # "label": "Classificação Média por Gênero"
-        "trending_count_by_category": result_trending_count_by_category #"label": "Produtos em Tendência por Categoria",
-    }
 
     config = {
         "dest_bucket":"dadosdeprodutos",
@@ -138,38 +163,17 @@ def aggregate_and_save_to_minio():
                secret_key=config["minio_password"],
                http_client = http_client
                )
-    
-    # Criar uma lista para armazenar os indicadores
-    indicators_list = []
-
-    for indicator_name, indicator_items in all_results.items():
-            for item in indicator_items:
-                formatted_item = {
-                    "indicator": indicator_name,
-                    "group_indicator": item["_id"],
-                    "value_indicator": item["value"]
-                }
-                indicators_list.append(formatted_item)
-
-                # Serialize the indicators_list as a JSON string
-                json_data = '\n'.join([json.dumps(ind, ensure_ascii=False) for ind in indicators_list])
-                data = BytesIO(json_data.encode('utf-8'))
-
-                # Creating a temporary file to write the BytesIO content
-                with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-                    temp_file.write(data.getvalue())
-                    temp_file_path = temp_file.name
-
-                if not minio_client.bucket_exists(config["dest_bucket"]):
-                    minio_client.make_bucket(config["dest_bucket"])
-
-                # Uploading the temporary file to MinIO with object_name set to indicator_name
-                minio_client.fput_object(config["dest_bucket"], indicator_name + ".json", temp_file_path)
-
-                # Removing the temporary file after writing
-                os.remove(temp_file_path)
 
 
+    generate_indicator_json("product_count_by_brand", result_product_count_by_brand, minio_client, config)
+    generate_indicator_json("product_count_by_category", result_product_count_by_category, minio_client, config)
+    generate_indicator_json("product_count_by_gender", result_product_count_by_gender, minio_client, config)
+    generate_indicator_json("average_price_by_category", result_average_price_by_category, minio_client, config)
+    generate_indicator_json("total_quantity_by_category", result_total_quantity_by_category, minio_client, config)
+    generate_indicator_json("average_rating_by_gender", result_average_rating_by_gender, minio_client, config)
+    generate_indicator_json("trending_count_by_category", result_trending_count_by_category, minio_client, config)
+
+   
 dag = DAG(
     'mongo_db_aggregation_products_minio_dag',
     default_args=default_args,
