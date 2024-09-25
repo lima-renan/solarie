@@ -36,6 +36,7 @@ services:
   app:
     restart: always
     container_name: app
+    hostname: app
     build:
       context: ./frontend
       dockerfile: Dockerfile.app
@@ -54,6 +55,7 @@ services:
   auth-server:
     restart: always
     container_name: auth-server
+    hostname: auth-server
     build:
       context: ./backend
       dockerfile: Dockerfile.auth-server
@@ -77,6 +79,7 @@ services:
   user-mongodb:
     restart: always
     container_name: user-mongodb
+    hostname: user-mongodb
     image: mongo:5.0
     user: ${UID}:${GID}
     ports:
@@ -85,9 +88,9 @@ services:
       - $PWD/volumes/mongodb/data/user:/data/db
       - $PWD/volumes/mongodb/docker-entrypoint-initdb.d/mongo-init-user.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     environment:
-       MONGO_INITDB_ROOT_USERNAME: MONGO_ROOT_USER
-       MONGO_INITDB_ROOT_PASSWORD: MONGO_ROOT_PASSWORD
-       MONGO_INITDB_DATABASE: MONGO_DATABASE_INIT
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGO_DATABASE_INIT}
     healthcheck:
       test: echo 'db.runCommand({serverStatus:1}).ok' | mongo admin -u ${MONGO_ROOT_USER} -p ${MONGO_ROOT_PASSWORD} --quiet | grep 1
       interval: 10s
@@ -101,6 +104,7 @@ services:
   cart-mongodb:
     restart: always
     container_name: cart-mongodb
+    hostname: cart-mongodb
     image: mongo:5.0
     user: ${UID}:${GID}
     ports:
@@ -109,9 +113,9 @@ services:
       - $PWD/volumes/mongodb/data/cart:/data/db
       - $PWD/volumes/mongodb/docker-entrypoint-initdb.d/mongo-init-cart.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     environment:
-      MONGO_INITDB_ROOT_USERNAME: MONGO_ROOT_USER
-      MONGO_INITDB_ROOT_PASSWORD: MONGO_ROOT_PASSWORD
-      MONGO_INITDB_DATABASE: MONGO_DATABASE_INIT
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGO_DATABASE_INIT}
     healthcheck:
       test: echo 'db.runCommand({serverStatus:1}).ok' | mongo admin -u ${MONGO_ROOT_USER} -p ${MONGO_ROOT_PASSWORD} --quiet | grep 1
       interval: 10s
@@ -125,6 +129,7 @@ services:
   product-mongodb:
     restart: always
     container_name: product-mongodb
+    hostname: product-mongodb
     image: mongo:5.0
     user: ${UID}:${GID}
     ports:
@@ -133,9 +138,9 @@ services:
       - $PWD/volumes/mongodb/data/product:/data/db
       - $PWD/volumes/mongodb/docker-entrypoint-initdb.d/mongo-init-product.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     environment:
-      MONGO_INITDB_ROOT_USERNAME: MONGO_ROOT_USER
-      MONGO_INITDB_ROOT_PASSWORD: MONGO_ROOT_PASSWORD
-      MONGO_INITDB_DATABASE: MONGO_DATABASE_INIT
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGO_DATABASE_INIT}
     healthcheck:
       test: echo 'db.runCommand({serverStatus:1}).ok' | mongo admin -u ${MONGO_ROOT_USER} -p ${MONGO_ROOT_PASSWORD} --quiet | grep 1
       interval: 10s

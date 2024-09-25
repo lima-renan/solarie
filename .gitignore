@@ -10,7 +10,7 @@
 #Ignore
 volumes/airflow-data/logs/*
 
-volumes/mongodb/*
+volumes/mongodb/data/
 
 catalog/env_catalog/*
 
