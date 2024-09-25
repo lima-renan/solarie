@@ -59,3 +59,4 @@ yarn-error.log*
 .netlify
 
 volumes/hive/drivers/
+volumes/airflow-data/dags/__pycache__
