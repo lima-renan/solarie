@@ -48,3 +48,26 @@ build:
 	docker-compose -f $(DATAHUB_COMPOSE) up --build --force-recreate -d
 	@echo "Restaurando dados do DataHub..."
 	cd catalog && chmod +x ./datahub-upgrade.sh && ./datahub-upgrade.sh -u RestoreIndices
+
+	# Iniciar os containers sem reconstruí-los
+start:
+	@echo "Iniciando containers do Data Mesh..."
+	docker-compose -f $(DATAMESH_COMPOSE) start
+	@echo "Iniciando containers do DataHub..."
+	docker-compose -f $(DATAHUB_COMPOSE) start
+
+# Parar os containers sem removê-los
+stop:
+	@echo "Parando containers do Data Mesh..."
+	docker-compose -f $(DATAMESH_COMPOSE) stop
+	@echo "Parando containers do DataHub..."
+	docker-compose -f $(DATAHUB_COMPOSE) stop
+
+# Forçar a remoção de tudo (imagens, containers, volumes)
+clean:
+	@echo "Removendo container do DataHub Upgrade..."
+	docker rm -f $(CONTAINER_NAME) || true
+	@echo "Removendo containers, imagens e volumes do DataHub..."
+	docker-compose -f $(DATAHUB_COMPOSE) down -v --rmi all
+	@echo "Removendo containers, imagens e volumes do Data Mesh..."
+	docker-compose -f $(DATAMESH_COMPOSE) down -v --rmi all
