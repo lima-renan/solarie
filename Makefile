@@ -49,7 +49,7 @@ build:
 	@echo "Restaurando dados do DataHub..."
 	cd catalog && chmod +x ./datahub-upgrade.sh && ./datahub-upgrade.sh -u RestoreIndices
 
-	# Iniciar os containers sem reconstruí-los
+# Iniciar os containers sem reconstruí-los
 start:
 	@echo "Iniciando containers do Data Mesh..."
 	docker-compose -f $(DATAMESH_COMPOSE) start
