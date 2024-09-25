@@ -51,7 +51,7 @@ def aggregate_and_save_to_minio():
         formatted_result.append(formatted_item)
 
     config = {
-        "dest_bucket":"dadosdeclientes",
+        "dest_bucket":"dadosdeclientes/json",
         "object_name":"estratificacaoDeClientes.json",
         "minio_endpoint":"172.21.0.9:9000",
         "minio_username": "minio_user",

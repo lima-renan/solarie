@@ -23,6 +23,7 @@ frontend/.devconatiner/*
 volumes/minio/.minio.sys/*
 volumes/postgres/postgres-data
 volumes/mysql/mysql-data
+volumes/hive/warehouse
 
 #Not Ignore
 !volumes/mongodb/docker-entrypoint-initdb.d/*
@@ -56,3 +57,5 @@ yarn-error.log*
 
 # Local Netlify folder
 .netlify
+
+volumes/hive/drivers/

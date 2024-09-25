@@ -10,5 +10,5 @@ CREATE TABLE IF NOT EXISTS minio.dadosdeclientes.dadosclientes (
     )
     WITH (
        format = 'json',
-       external_location = 's3a://dadosdeclientes/'
+       external_location = 's3a://dadosdeclientes/json/'
     );

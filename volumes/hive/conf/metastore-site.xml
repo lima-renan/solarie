@@ -13,23 +13,24 @@
         <value>org.apache.hadoop.hive.metastore.DefaultPartitionExpressionProxy</value>
     </property>
     <property>
-        <name>javax.jdo.option.ConnectionDriverName</name>
-        <value>com.mysql.cj.jdbc.Driver</value>
+      <name>javax.jdo.option.ConnectionDriverName</name>
+      <value>org.postgresql.Driver</value>
+      <description>PostgreSQL JDBC driver class</description>
     </property>
 
     <property>
         <name>javax.jdo.option.ConnectionURL</name>
-        <value>jdbc:mysql://mariadb:3306/metastore_db</value>
+        <value>jdbc:postgresql://metastore-db:5432/metastore_db</value>
     </property>
 
     <property>
         <name>javax.jdo.option.ConnectionUserName</name>
-        <value>admin</value>
+        <value>hive</value>
     </property>
 
     <property>
         <name>javax.jdo.option.ConnectionPassword</name>
-        <value>admin</value>
+        <value>password</value>
     </property>
 
     <property>
@@ -42,7 +43,7 @@
     </property>
     <property>
         <name>fs.s3a.endpoint</name>
-        <value>http://172.21.0.9:9000</value>
+        <value>http://minio:9000</value>
     </property>
     <property>
         <name>fs.s3a.path.style.access</name>

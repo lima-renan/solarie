@@ -1,5 +1,9 @@
+CREATE DATABASE IF NOT EXISTS datahub;
+
+USE datahub;
+
 -- create metadata aspect table
-CREATE TABLE metadata_aspect_v2 (
+CREATE TABLE IF NOT EXISTS metadata_aspect_v2 (
   urn                           VARCHAR(500) NOT NULL,
   aspect                        VARCHAR(200) NOT NULL,
   version                       bigint(20) NOT NULL,

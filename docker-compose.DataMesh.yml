@@ -12,6 +12,7 @@ x-airflow-common:
   build:
     context: .
     dockerfile: Dockerfile.airflow
+  user: ${UID}:${GID}
   env_file: 
     - .env
   volumes:
@@ -41,7 +42,7 @@ services:
     env_file: 
       - .env
     volumes:
-      - ./frontend/app/src:/app/src
+      - $PWD/frontend/app/src:/app/src
     ports:
       - "3000:3000"
     depends_on:
@@ -59,7 +60,7 @@ services:
     env_file: 
       - .env
     volumes:
-      - ./backend/auth-server/src:/auth-server/src
+      - $PWD/backend/auth-server/src:/auth-server/src
     ports:
       - 8082:8081
     depends_on:
@@ -77,6 +78,7 @@ services:
     restart: always
     container_name: user-mongodb
     image: mongo:5.0
+    user: ${UID}:${GID}
     ports:
       - 27017:27017
     volumes:
@@ -100,6 +102,7 @@ services:
     restart: always
     container_name: cart-mongodb
     image: mongo:5.0
+    user: ${UID}:${GID}
     ports:
       - 27018:27017
     volumes:
@@ -123,6 +126,7 @@ services:
     restart: always
     container_name: product-mongodb
     image: mongo:5.0
+    user: ${UID}:${GID}
     ports:
       - 27019:27017
     volumes:
@@ -178,8 +182,10 @@ services:
 
   minio:
     restart: always
-    image: minio/minio
+    image: minio/minio:RELEASE.2024-09-13T20-26-02Z.fips
+    user: ${UID}:${GID}
     container_name: minio
+    hostname: minio
     ports:
       - 9000:9000
       - 9001:9001
@@ -190,14 +196,15 @@ services:
       MINIO_CONSOLE_ADDRESS: ':9001'
     volumes:
       - $PWD/volumes/minio:/data
-    command: minio server /data
+    command:  server --console-address ":9001" /data
     networks:
       datanet:
        ipv4_address: 172.21.0.9
 
   postgres:
     container_name: postgres
-    image: postgres:11.0-alpine
+    image: postgres:13.0
+    user: ${UID}:${GID}
     ports:
       - 5432:5432
     volumes:
@@ -209,7 +216,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_USER_PASSWORD}
       - POC_PASSWORD=${DATABASE_PASSWORD}
     healthcheck:
-      test: [ "CMD", "pg_isready", "-q", "-d", "postgres", "-U", "poc" ]
+      test: [ "CMD", "pg_isready", "-q", "-d", "metastore_db", "-U", "hive" ]
       interval: 5s
       retries: 5
     networks:
@@ -237,7 +244,8 @@ services:
 
   airflow_db:
     container_name: airflow_db
-    image: postgres:11.0-alpine
+    image: postgres:13.0
+    user: ${UID}:${GID}
     environment:
       - POSTGRES_USER=${AIRFLOW_POSTGRES_USER}
       - POSTGRES_PASSWORD=${AIRFLOW_POSTGRES_PASSWORD}
@@ -253,9 +261,12 @@ services:
        ipv4_address: 172.21.0.12
   
   mysql: # banco para metadados do Datahub
-    restart: always
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --default-authentication-plugin=mysql_native_password
     container_name: mysql
+    image: mysql:8.2
+    restart: always
+    hostname: mysql
+    user: ${UID}:${GID}
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_bin
     environment:
     - MYSQL_DATABASE=${MYSQL_DATABASE}
     - MYSQL_USER=${MYSQL_USER}
@@ -267,8 +278,7 @@ services:
       start_period: 2s
       test: mysqladmin ping -h mysql -u $$MYSQL_USER --password=$$MYSQL_PASSWORD
       timeout: 5s
-    hostname: mysql
-    image: mariadb:10.5.8
+    
     ports:
     - 3306:3306
     volumes:
@@ -323,8 +333,9 @@ services:
        ipv4_address: 172.21.0.17
 
   trino-coordinator:
-    container_name: trino
-    image: trinodb/trino:latest
+    image: trinodb/trino:458
+    user: ${UID}:${GID}
+    container_name: trino-coordinator
     hostname: trino-coordinator
     environment:
       - TRINO_ENVIRONMENT=production
@@ -337,7 +348,8 @@ services:
        ipv4_address: 172.21.0.18
 
   trino-worker:
-    image: trinodb/trino:latest
+    image: trinodb/trino:458
+    user: ${UID}:${GID}
     container_name: trino-worker
     hostname: trino-worker
     environment:
@@ -355,6 +367,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.jupyter
+    user: ${UID}:${GID}
     ports: 
       - 8888:8888
     environment: 
@@ -367,17 +380,23 @@ services:
       datanet:
        ipv4_address: 172.21.0.20
 
-  mariadb:
-    container_name: mariadb
-    hostname: mariadb
-    image: mariadb:10.5.8
+  metastore-db:
+    container_name: metastore-db
+    hostname: metastore-db
+    image: postgres:13.0
+    user: ${UID}:${GID}
     ports:
-      - 3307:3306
+      - 5434:5432
+    volumes:
+      - $PWD/volumes/metastore-db/data
     environment:
-      - MYSQL_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
-      - MYSQL_USER=${MARIADB_USER}
-      - MYSQL_PASSWORD=${MARIADB_PASSWORD}
-      - MYSQL_DATABASE=${MARIADB_DATABASE}
+      - POSTGRES_USER=${METASTORE_DB_USER}
+      - POSTGRES_PASSWORD=${METASTORE_DB_PASSWORD}
+      - POSTGRES_DB=${METASTORE_DB_DATABASE}
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "postgres", "-U", "poc" ]
+      interval: 5s
+      retries: 5
     networks:
       datanet:
        ipv4_address: 172.21.0.21
@@ -385,15 +404,42 @@ services:
   hive-metastore:
     container_name: hive-metastore
     hostname: hive-metastore
-    image: 'bitsondatadev/hive-metastore:latest'
+    image: apache/hive:4.0.0
+    user: ${UID}:${GID}
     ports:
       - 9083:9083 # Metastore Thrift
     volumes:
-      - $PWD/volumes/hive/conf/metastore-site.xml:/opt/apache-hive-metastore-3.0.0-bin/conf/metastore-site.xml:ro
+      - $PWD/volumes/hive/conf/core-site.xml:/opt/hadoop-3.3.6/etc/hadoop/core-site.xml:ro
+      - $PWD/volumes/hive/conf/metastore-site.xml:/opt/hive/conf/metastore-site.xml:ro
+      - $PWD/volumes/hive/drivers/postgresql-42.5.1.jar:/opt/hive/lib/postgres.jar
+      - $PWD/volumes/hive/drivers/hadoop-aws-3.3.2.jar:/opt/hive/lib/hadoop-aws.jar
+      - $PWD/volumes/hive/drivers/aws-java-sdk-bundle-1.11.1026.jar:/opt/hive/lib/aws-java-sdk-bundle.jar
+      - $PWD/volumes/hive/warehouse:/opt/hive/data/warehouse
     environment:
+      - SERVICE_NAME=${SERVICE_NAME}
+      - DB_DRIVER=${DB_DRIVER}
       - METASTORE_DB_HOSTNAME=${METASTORE_DB_HOSTNAME}
+      - VERBOSE=${VERBOSE}
     depends_on:
-      - mariadb
+      - metastore-db
+      - minio
     networks:
       datanet:
        ipv4_address: 172.21.0.22
+  
+  dbeaver:
+    container_name: dbeaver
+    hostname: dbeaver
+    image: dbeaver/cloudbeaver:24.2.0
+    user: ${UID}:${GID}
+    ports:
+      - 8978:8978
+    environment:
+      - CB_ADMIN_NAME=${CB_ADMIN_NAME}
+      - CB_ADMIN_PASSWORD=${CB_ADMIN_PASSWORD}
+    volumes:
+      - $PWD/volumes/dbeaver-data:/opt/dbeaver/conf
+    restart: always
+    networks:
+      datanet:
+       ipv4_address: 172.21.0.23
