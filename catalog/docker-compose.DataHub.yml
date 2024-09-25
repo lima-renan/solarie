@@ -86,6 +86,7 @@ services:
         ipv4_address: 172.21.0.32
   datahub-gms:
     container_name: datahub-gms
+    hostname: datahub-gms
     depends_on:
       datahub-upgrade:
         condition: service_completed_successfully
