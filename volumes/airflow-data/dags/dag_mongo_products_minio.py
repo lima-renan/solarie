@@ -144,7 +144,7 @@ def aggregate_and_save_to_minio():
     client.close()
 
     config = {
-        "dest_bucket":"dadosdeprodutos",
+        "dest_bucket":"dadosdeprodutos/json",
         "object_name":"indicadoresDeProdutos.json",
         "minio_endpoint":"172.21.0.9:9000",
         "minio_username": "minio_user",

@@ -7,5 +7,5 @@ CREATE TABLE IF NOT EXISTS minio.dadosdeprodutos.indicadoresProdutos (
         value_indicator DOUBLE
 ) WITH (
     format = 'json',
-    external_location = 's3a://dadosdeprodutos/'
+    external_location = 's3a://dadosdeprodutos/json/'
 );
